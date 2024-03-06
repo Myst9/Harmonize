@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "ToxiCheck",
+  "description": "A extension to give toxicity reports",
+  "version": "1.0.1",
+  "minimum_chrome_version": "49",
+  "author": "SETeam4",
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "ToxiCheck"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["index.html"],
+      "matches": ["https://*/*"]
+    }
+  ],
+  "permissions": ["tabs", "storage", "webRequest", "webNavigation"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["style.css"],
+      "js": ["js/jquery-3.3.1.min.js", "app.js", "js/chart_imported.js"]
+    }
+  ]
+}
