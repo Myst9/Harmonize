@@ -5,13 +5,17 @@ from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
 
+import google.generativeai as genai
+genai.configure(api_key="your such_an_idiot_obv_we_wont_give_it_away")
+model_gem = genai.GenerativeModel('gemini-pro')
+
 import torch
 import numpy as np
 
 app = Flask(__name__)
 CORS(app)
 
-###MODEL AND TOKENIZER LOADING###
+# ###MODEL AND TOKENIZER LOADING###
 from transformers import BertForSequenceClassification
 
 # Load the pre-trained model
@@ -61,6 +65,10 @@ def model_predict_dsh(sentence):
     return (predicted_class,predicted_probs.numpy())
 
 
+def model_suggest_san(toxic):
+    response = model_gem.generate_content(toxic +"This is a toxic sentence,rewrite in an untoxic form. Remember that you should rewrite it in a software specific way as it is from a software forum")
+    return response.text
+
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
     if request.method == 'POST':
@@ -79,6 +87,25 @@ def predict():
     return None
 
 
+@app.route('/suggest', methods=['GET', 'POST'])
+def suggest():
+    print("out")
+    if request.method == 'POST':
+        # Get the image from post request
+        # img = base64_to_pil(request.json)
+        
+        # Make prediction
+        print("hi")
+        prediction = model_suggest_san(request.json)
+        result = prediction
+        
+        return jsonify(result=result)
+
+    return None
+
+
 if __name__ == '__main__':
+    print("s")
     http_server = WSGIServer(('127.0.0.1', 5000), app)
+    print("h")
     http_server.serve_forever()
