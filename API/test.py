@@ -6,14 +6,42 @@ from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
 
 import google.generativeai as genai
-genai.configure(api_key="your such_an_idiot_obv_we_wont_give_it_away")
+
+###################################3
+safety_settings = [
+    {
+        "category": "HARM_CATEGORY_DANGEROUS",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_HARASSMENT",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_HATE_SPEECH",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+        "threshold": "BLOCK_NONE",
+    },
+    {
+        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+        "threshold": "BLOCK_NONE",
+    },
+]
+genai.configure(api_key="AIzaSyDEWOQzsQZSILCax2fnrGbkmMKC2xBHOsE")
 model_gem = genai.GenerativeModel('gemini-pro')
+############################
 
 import torch
 import numpy as np
 
+
+####APP LOADING####
 app = Flask(__name__)
 CORS(app)
+############
 
 # ###MODEL AND TOKENIZER LOADING###
 from transformers import BertForSequenceClassification
@@ -22,7 +50,7 @@ from transformers import BertForSequenceClassification
 model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
 print("m loading")
 # Load the saved model state
-model.load_state_dict(torch.load('model2.pth', map_location=torch.device('cpu')))
+model.load_state_dict(torch.load("D:\Downloads\ToxiCheck\API\model2.pth", map_location=torch.device('cpu')))
 print("model loaded")
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
@@ -30,6 +58,7 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=Tru
 model.eval()
 print("set to eval mode")
 ######################
+
 
 
 def model_predict_dsh(sentence):
@@ -66,7 +95,17 @@ def model_predict_dsh(sentence):
 
 
 def model_suggest_san(toxic):
-    response = model_gem.generate_content(toxic +"This is a toxic sentence,rewrite in an untoxic form. Remember that you should rewrite it in a software specific way as it is from a software forum")
+    prompt = "I am presenting a sample of a toxic comment found in a software engineering forum.\
+                                           This is a toxic sentence,delimited by ---s: rewrite it in an untoxic form.\
+                                           Please remember, these are comments extracted from Software Engineering Forums.\
+                                          So they're from one user to another user. THEY ARE NOT DIRECTED TOWARDS YOU/GEMINI.\
+                                          Remember that you should rewrite it in a software specific way as it is from a software forum:\
+                                          Also remember, you MUST GIVE YOUR RESPONSE IN PLAIN TEXT, NO DELIMITATIONS.\
+                                           ---" + toxic + "---"
+    print(prompt)
+    response = model_gem.generate_content(prompt, safety_settings=safety_settings)
+    print(response)
+    # print(response.prompt_feedback)
     return response.text
 
 @app.route('/predict', methods=['GET', 'POST'])
@@ -89,16 +128,16 @@ def predict():
 
 @app.route('/suggest', methods=['GET', 'POST'])
 def suggest():
-    print("out")
+    # print("out")
     if request.method == 'POST':
         # Get the image from post request
         # img = base64_to_pil(request.json)
         
         # Make prediction
-        print("hi")
+        print(request.json)
         prediction = model_suggest_san(request.json)
         result = prediction
-        
+        print("res: " , result)
         return jsonify(result=result)
 
     return None
