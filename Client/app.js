@@ -578,7 +578,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                 inputs: sentence,
               });
               let suggestion = "";
-              await (sentence_data).then((ans) => {
+              await genResult(sentence_data).then((ans) => {
                 console.log(ans);
                 // if (ans) suggestion = ans.generated_text;
                 if (ans) suggestion = ans;
