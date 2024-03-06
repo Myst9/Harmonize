@@ -30,7 +30,7 @@ safety_settings = [
         "threshold": "BLOCK_NONE",
     },
 ]
-genai.configure(api_key="AIzaSyDEWOQzsQZSILCax2fnrGbkmMKC2xBHOsE")
+genai.configure(api_key="GO_OUT_YOU_STUPID")
 model_gem = genai.GenerativeModel('gemini-pro')
 ############################
 
