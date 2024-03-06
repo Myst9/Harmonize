@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "ToxiCheck",
-  "description": "A extension to give toxicity reports",
-  "version": "1.0.1",
+  "name": "Toxic-Comment-Classification",
+  "description": "An extension to give toxicity reports",
+  "version": "2.0.1",
   "minimum_chrome_version": "49",
-  "author": "SETeam4",
+  "author": "SETeam10",
   "action": {
     "default_popup": "index.html",
-    "default_title": "ToxiCheck"
+    "default_title": "Toxic-Comment-Classification"
   },
   "web_accessible_resources": [
     {
