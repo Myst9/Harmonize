@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Toxic-Comment-Classification",
-  "description": "An extension to give toxicity reports",
+  "name": "Harmonize",
+  "description": "An extension which detects toxic comments in SE spaces and blurs them out for you. It also shows alternate harmonious comments when you try to post toxic comments in these spaces.",
   "version": "2.0.1",
   "minimum_chrome_version": "49",
   "author": "SETeam10",
