@@ -6,6 +6,10 @@ from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
 
 import google.generativeai as genai
+import os
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(script_dir, "model2.pth")
 
 ###################################3
 safety_settings = [
@@ -30,7 +34,7 @@ safety_settings = [
         "threshold": "BLOCK_NONE",
     },
 ]
-genai.configure(api_key="GO_OUT_YOU_STUPID")
+genai.configure(api_key="AIzaSyDEWOQzsQZSILCax2fnrGbkmMKC2xBHOsE")
 model_gem = genai.GenerativeModel('gemini-pro')
 ############################
 
@@ -50,7 +54,7 @@ from transformers import BertForSequenceClassification
 model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
 print("m loading")
 # Load the saved model state
-model.load_state_dict(torch.load("D:\Downloads\ToxiCheck\API\model2.pth", map_location=torch.device('cpu')))
+model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 print("model loaded")
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
