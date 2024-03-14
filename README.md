@@ -40,7 +40,7 @@ UI -
 1. Clone the repository using the following commands
 ```
 $ git lfs install
-$ git clone git@github.com:Myst9/Harmonize
+$ git clone git@github.com:Myst9/Harmonize.git
 $ cd Harmonize
 $ git lfs fetch
 $ git lfs checkout
