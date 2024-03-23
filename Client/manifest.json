@@ -7,7 +7,10 @@
   "author": "SETeam10",
   "action": {
     "default_popup": "index.html",
-    "default_title": "Toxic-Comment-Classification"
+    "default_title": "Harmonize"
+  },
+  "icons":{
+    "128": "./128_logo.png"
   },
   "web_accessible_resources": [
     {
