@@ -1,7 +1,7 @@
 # Harmonize
 ### A Tool to Detect Cyberbullying and Check the Toxicity of Comments on Various Websites
 ## About
-Harmonize is a Google Chrome Extension which primarily targets software developer websites such as Github. It detects cyberbullying on them, and provides toxicity reports on comments, if a toxic comment is already posted in website, it blurs the comment. Along with this, Harmonize also assists the user in avoiding the use of toxic language by suggesting gentler alternatives as they type.  
+Harmonize is a Google Chrome Extension built to make Software Engineering online spaces more peaceful and harmonious than they currently are. It focuses on giving young and budding software engineers a positive environment so that they can grow and build successful careers. It primarily targets Software Developer websites like GitHub, detects Cyberbullying on these websites and protects you from it. It also assists you in turning your negative/toxic comments into something more constructive/productive before you post comments on the aforementioned sites.
 <br />
 
 <p align="center">
