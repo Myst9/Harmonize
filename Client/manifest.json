@@ -10,7 +10,7 @@
     "default_title": "Harmonize"
   },
   "icons":{
-    "128": "./128_logo.png"
+    "128": "128_logo.png"
   },
   "web_accessible_resources": [
     {
