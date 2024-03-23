@@ -17,6 +17,14 @@ UI -
 1. Vanilla JS
 2. Chart JS
 
+## Pipeline
+
+The pipeline/architecture/flow diagram of our toxicity detector model is:
+
+<p align="center">
+<img src="https://github.com/Myst9/Harmonize/blob/main/Images/Harmonize_Pipeline.jpg" />
+</p>
+
 ## Major Features
 
 ### Toxicity Chart for GitHub
