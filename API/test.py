@@ -11,6 +11,8 @@ import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(script_dir, "model2.pth")
 
+from github import Github
+
 ###################################3
 safety_settings = [
     {
@@ -112,6 +114,31 @@ def model_suggest_san(toxic):
     # print(response.prompt_feedback)
     return response.text
 
+
+def model_repocheck(repo_name, owner):
+    # Initialize PyGithub with an anonymous GitHub API access
+    g = Github()
+
+    # Get the repository
+    repo = g.get_repo(f"{owner}/{repo_name}")
+
+    # Get all issues from the repository
+    issues = repo.get_issues(state='all')
+
+    # Iterate through issues and extract comments
+    for issue in issues:
+        if issue.body:  # Check if issue body is not None
+            p = model_predict_dsh(issue.body)
+            print(p[0])
+            comments = issue.get_comments()
+            for comment in comments:
+                if comment.body:  # Check if comment body is not None
+                    o = model_predict_dsh(comment.body)
+                    print(o[0])
+            print("\n")
+    return repo_name
+
+
 @app.route('/predict', methods=['GET', 'POST'])
 def predict():
     if request.method == 'POST':
@@ -140,6 +167,24 @@ def suggest():
         # Make prediction
         print(request.json)
         prediction = model_suggest_san(request.json)
+        result = prediction
+        print("res: " , result)
+        return jsonify(result=result)
+
+    return None
+
+@app.route('/repocheck', methods=['GET', 'POST'])
+def repocheck():
+    print("out")
+    if request.method == 'POST':
+        # Get the image from post request
+        # img = base64_to_pil(request.json)
+        
+        # Make prediction
+        
+        s="gym-chess"
+        print(request.json)
+        prediction = model_repocheck(s,request.json)
         result = prediction
         print("res: " , result)
         return jsonify(result=result)
