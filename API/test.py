@@ -13,6 +13,9 @@ model_path = os.path.join(script_dir, "model2.pth")
 
 from github import Github
 
+#checking git push
+
+
 ###################################3
 safety_settings = [
     {
