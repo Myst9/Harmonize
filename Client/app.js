@@ -1,9 +1,29 @@
+
+
+
 threshold_score = 0.75
+
 
 parcelRequire = (function (modules, cache, entry, globalName) {
   // Save the require from previous bundle to this closure if any
   var previousRequire = typeof parcelRequire === "function" && parcelRequire;
   var nodeRequire = typeof require === "function" && require;
+
+
+// background.js
+
+// // Create a listener for when the active tab changes
+// chrome.tabs.onActivated.addListener(function(activeInfo) {
+//   // Get details of the current tab
+//   chrome.tabs.get(activeInfo.tabId, function(tab) {
+//       // Log the URL of the current tab
+//       console.log("Current URL:", tab.url);
+//       // You can use tab.url in any way you want here
+//   });
+// });
+
+
+
 
   function newRequire(name, jumped) {
     if (!cache[name]) {
@@ -155,6 +175,35 @@ parcelRequire = (function (modules, cache, entry, globalName) {
         
           try {
             const response = await fetch("http://127.0.0.1:5000/suggest", options);
+            const data = await response.json();
+        
+            // Handle the result as needed
+            console.log("Result:", data.result);
+        
+            return data.result;
+          } catch (error) {
+            console.error("Error:", error);
+            throw error;
+          }
+        }
+
+        /**
+         * Generating sentences
+         * @param {String} send_data
+         * @returns response (object)
+         */
+        async function getreposcore_s(send_data) {
+          const options = {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(send_data),
+          };
+        
+          try {
+            const response = await fetch("http://127.0.0.1:5000/repocheck", options);
             const data = await response.json();
         
             // Handle the result as needed
@@ -1166,7 +1215,20 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           }
         }
 
+        async function get_url_s()
+        {
+          // Listen for messages from the background script
+          chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+            // Handle the received message
+            console.log("Message received in content script:", message);
+            getreposcore_s(message.url);
+          });
+        }
+
+        
+
         $(document).ready(function () {
+          get_url_s();
           scrapeWhole();
           main();
         });
