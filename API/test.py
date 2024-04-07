@@ -121,7 +121,7 @@ def model_suggest_san(toxic):
 def model_repocheck(url):
     try:
         # Initialize PyGithub with an anonymous GitHub API access
-        g = Github("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")
+        g = Github("git api here")
 
         # Get the repository
         repo = g.get_repo(url)
