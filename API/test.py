@@ -99,47 +99,64 @@ def model_predict_dsh(sentence):
     predicted_probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
     # Get the predicted class index
     predicted_class = torch.argmax(predicted_probs, dim=1).item()
-    print(predicted_class, predicted_probs.numpy())
+    # print(predicted_class, predicted_probs.numpy())
     return (predicted_class,predicted_probs.numpy())
 
 
 def model_suggest_san(toxic):
+    suggestions = []
     prompt = "I am presenting a sample of a toxic comment found in a software engineering forum.\
-                                           This is a toxic sentence,delimited by ---s: rewrite it in an untoxic form.\
+                                           This is a toxic sentence,delimited by ---s: rewrite it in an untoxic form, provide 3 suggestions so that user can choose any one of them.\
                                            Please remember, these are comments extracted from Software Engineering Forums.\
                                           So they're from one user to another user. THEY ARE NOT DIRECTED TOWARDS YOU/GEMINI.\
                                           Remember that you should rewrite it in a software specific way as it is from a software forum:\
                                           Also remember, you MUST GIVE YOUR RESPONSE IN PLAIN TEXT, NO DELIMITATIONS.\
                                            ---" + toxic + "---"
-    print(prompt)
-    response = model_gem.generate_content(prompt, safety_settings=safety_settings)
-    print(response)
+    for _ in range(3):
+        response = model_gem.generate_content(prompt, safety_settings=safety_settings)
+        suggestion = response.text
+        print("Generated suggestion:", suggestion)
+        suggestions.append(suggestion)
+    #print(prompt)
+    #response = model_gem.generate_content(prompt, safety_settings=safety_settings)
+    #print(response)
     # print(response.prompt_feedback)
-    return response.text
+    return suggestions
 
 
-def model_repocheck(repo_name, owner):
-    # Initialize PyGithub with an anonymous GitHub API access
-    g = Github()
+def model_repocheck(url):
+    try:
+        # Initialize PyGithub with an anonymous GitHub API access
+        g = Github("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")
 
-    # Get the repository
-    repo = g.get_repo(f"{owner}/{repo_name}")
+        # Get the repository
+        repo = g.get_repo(url)
+        count=0
+        toxic_count=0
+        toxic_prob=0
+        # Get all issues from the repository
+        issues = repo.get_issues(state='all')
 
-    # Get all issues from the repository
-    issues = repo.get_issues(state='all')
+        # Iterate through issues and extract comments
+        for issue in issues:
+            if issue.body:  # Check if issue body is not None
+                p = model_predict_dsh(issue.body)
+                count+=1
+                toxic_count+=p[0]
+                toxic_prob+=p[1][0][1]
+                comments = issue.get_comments()
+                for comment in comments:
+                    if comment.body:  # Check if comment body is not None
+                        o = model_predict_dsh(comment.body)
+                        count+=1
+                        toxic_count+=o[0]
+                        toxic_prob+=o[1][0][1]
+        print(toxic_count," ",count)
+        return toxic_prob/count
+    except Exception as e:
+        print("Error:", e)
+        return None
 
-    # Iterate through issues and extract comments
-    for issue in issues:
-        if issue.body:  # Check if issue body is not None
-            p = model_predict_dsh(issue.body)
-            print(p[0])
-            comments = issue.get_comments()
-            for comment in comments:
-                if comment.body:  # Check if comment body is not None
-                    o = model_predict_dsh(comment.body)
-                    print(o[0])
-            print("\n")
-    return repo_name
 
 
 @app.route('/predict', methods=['GET', 'POST'])
@@ -168,11 +185,12 @@ def suggest():
         # img = base64_to_pil(request.json)
         
         # Make prediction
-        print(request.json)
-        prediction = model_suggest_san(request.json)
-        result = prediction
-        print("res: " , result)
-        return jsonify(result=result)
+        toxic_comment = request.json.get('toxic')
+        if toxic_comment:
+            suggestions = model_suggest_san(toxic_comment)
+            print("Suggetsions: ", suggestions)
+            return jsonify(suggestions=suggestions)
+       
 
     return None
 
@@ -185,9 +203,12 @@ def repocheck():
         
         # Make prediction
         
-        s="gym-chess"
+        url = request.json
+        repository = url.split("github.com/")[-1]  # Extract everything after "github.com/"
+        print(repository)
+        
         print(request.json)
-        prediction = model_repocheck(s,request.json)
+        prediction = model_repocheck(repository)
         result = prediction
         print("res: " , result)
         return jsonify(result=result)
@@ -196,6 +217,10 @@ def repocheck():
 
 
 if __name__ == '__main__':
+    # m=model_predict_dsh("i don't need your opinion")
+    # print(m[1][0][0])
+    # k=model_repocheck("tensorflow/tensorflow")
+    # print(k)
     print("s")
     http_server = WSGIServer(('127.0.0.1', 5000), app)
     print("h")

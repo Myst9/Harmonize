@@ -18,7 +18,10 @@
       "matches": ["https://*/*"]
     }
   ],
-  "permissions": ["tabs", "storage", "webRequest", "webNavigation"],
+  "permissions": ["tabs", "tabGroups", "storage", "webRequest", "webNavigation"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
