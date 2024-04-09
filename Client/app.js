@@ -379,49 +379,6 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           document.body.appendChild(checkButton);
 
           /**
-           * getscorebutton
-           * 
-           */
-          // Create Get Score Button
-          var getScoreButton = document.createElement("button");
-          getScoreButton.textContent = "Get Repo Score";
-          getScoreButton.id = "getScoreButton";
-          getScoreButton.style.position = "fixed";
-          getScoreButton.style.borderRadius = "20px";
-          getScoreButton.style.right = "10px";
-          getScoreButton.style.bottom = "60px";
-          getScoreButton.style.backgroundColor = "blue";
-          getScoreButton.style.color = "yellow";
-          getScoreButton.style.border = "none";
-          getScoreButton.style.padding = "8px";
-          getScoreButton.style.visibility = "visible";
-          getScoreButton.style.zIndex = 1000;
-
-          /**
-           * result box
-           */
-
-          // Create Result Box
-          var resultBox = document.createElement("div");
-          resultBox.id = "resultBox";
-          resultBox.style.position = "fixed";
-          resultBox.style.borderRadius = "100px";
-          resultBox.style.right = "10px";
-          resultBox.style.bottom = "60px";
-          resultBox.style.backgroundColor = "blue";
-          resultBox.style.padding = "10px";
-          resultBox.style.zIndex = 1000;
-          resultBox.style.display = "none"; // Change display property to 'block' to make it visible
-          resultBox.style.visibility = "visible"; // This line has no effect as visibility is already set to 'visible'
-
-
-          // Append elements to the document body
-          document.body.appendChild(getScoreButton);
-          initializeButton();
-          document.body.appendChild(resultBox);
-
-
-          /**
            * refering to currently listened element
            */
           var currentElement = null;
@@ -1024,7 +981,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                       ],
                       backgroundColor: [
                         "rgba(255, 99, 132, 0.8)",
-                        "rgba(75, 192, 192, 0.8)",
+                        "rgba(75, 192, 192, 0.8)",      
                         // "rgba(54, 162, 235, 0.2)",
                         // "rgba(255, 206, 86, 0.2)",
                         // "rgba(75, 192, 192, 0.2)",
@@ -1287,31 +1244,52 @@ parcelRequire = (function (modules, cache, entry, globalName) {
             // Handle the received message
             console.log("Message received in content script:", message);
 
-            try {
-              const cachedData = await getDataFromCache(message.url);
+            if (message.url.startsWith("https://github.com/")) {
+              console.log("yes it is github");
+              try {
+                const cachedData = await getDataFromCache(message.url);
 
-              if (cachedData && Date.now() < cachedData.expiresAt) {
-                console.log("Result from cache:", cachedData.data);
-                // Store the cached result globally
-                repoScoreResult = cachedData.data;
-              } else {
-                const result = await getreposcore_s(message.url);
-                console.log("Result from API:", result);
-                // Save the result to cache with expiration time
-                saveDataToCache(message.url, result);
-                // Store the result globally
-                repoScoreResult = result;
+                if (cachedData && Date.now() < cachedData.expiresAt) {
+                  console.log("Result from cache:", cachedData.data);
+                  // Store the cached result globally
+                  repoScoreResult = cachedData.data;
+                } else {
+                  const result = await getreposcore_s(message.url);
+                  console.log("Result from API:", result);
+                  // Save the result to cache with expiration time
+                  saveDataToCache(message.url, result);
+                  // Store the result globally
+                  repoScoreResult = result;
+                }
+                initializeButton(); // Call initializeButton
+              } catch (error) {
+                console.error("Error:", error);
               }
-            } catch (error) {
-              console.error("Error:", error);
             }
           });
         }
 
         function initializeButton() {
+          // Create Get Score Button
+          getScoreButton = document.createElement("button");
+          getScoreButton.textContent = "Get Repo Score";
+          getScoreButton.id = "getScoreButton";
+          getScoreButton.style.position = "fixed";
+          getScoreButton.style.borderRadius = "20px";
+          getScoreButton.style.right = "10px";
+          getScoreButton.style.bottom = "60px";
+          getScoreButton.style.backgroundColor = "blue";
+          getScoreButton.style.color = "yellow";
+          getScoreButton.style.border = "none";
+          getScoreButton.style.padding = "8px";
+          getScoreButton.style.visibility = "visible";
+          getScoreButton.style.zIndex = 1000;
+
+          // Add click event listener to the button
           getScoreButton.addEventListener("click", function () {
             // Display the result stored globally
             console.log("yes getscorebutton is clicked");
+            getScoreButton.style.display = "none";
             if (repoScoreResult !== null) {
               resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
               resultBox.style.display = "block"; // Make the resultBox visible
@@ -1320,7 +1298,28 @@ parcelRequire = (function (modules, cache, entry, globalName) {
               console.log("Result not available");
             }
           });
+
+          // Create Result Box
+          var resultBox = document.createElement("div");
+          resultBox.id = "resultBox";
+          resultBox.style.position = "fixed";
+          resultBox.style.borderRadius = "100px";
+          resultBox.style.right = "10px";
+          resultBox.style.bottom = "60px";
+          resultBox.style.backgroundColor = "blue";
+          resultBox.style.padding = "10px";
+          resultBox.style.zIndex = 1000;
+          resultBox.style.display = "none"; // Change display property to 'block' to make it visible
+          resultBox.style.visibility = "visible"; // This line has no effect as visibility is already set to 'visible
+
+          // Append resultBox to the body
+          document.body.appendChild(resultBox);
+
+          // Append getScoreButton to the body
+          document.body.appendChild(getScoreButton);
         }
+
+
 
 
 
