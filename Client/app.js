@@ -1,6 +1,3 @@
-
-
-
 threshold_score = 0.75
 
 
@@ -10,17 +7,17 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   var nodeRequire = typeof require === "function" && require;
 
 
-// background.js
+  // background.js
 
-// // Create a listener for when the active tab changes
-// chrome.tabs.onActivated.addListener(function(activeInfo) {
-//   // Get details of the current tab
-//   chrome.tabs.get(activeInfo.tabId, function(tab) {
-//       // Log the URL of the current tab
-//       console.log("Current URL:", tab.url);
-//       // You can use tab.url in any way you want here
-//   });
-// });
+  // // Create a listener for when the active tab changes
+  // chrome.tabs.onActivated.addListener(function(activeInfo) {
+  //   // Get details of the current tab
+  //   chrome.tabs.get(activeInfo.tabId, function(tab) {
+  //       // Log the URL of the current tab
+  //       console.log("Current URL:", tab.url);
+  //       // You can use tab.url in any way you want here
+  //   });
+  // });
 
 
 
@@ -142,16 +139,16 @@ parcelRequire = (function (modules, cache, entry, globalName) {
             },
             body: JSON.stringify(send_data), // Assuming your endpoint expects a string directly
           };
-        
+
           try {
             const response = await fetch("http://127.0.0.1:5000/predict", options);
             const data = await response.json();
-            
+
             // Handle the result as needed
-            console.log("Result:", data.result*data.probability);
+            console.log("Result:", data.result * data.probability);
             console.log("Probability:", data.probability);
-        
-            return data.result*data.probability;
+
+            return data.result * data.probability;
           } catch (error) {
             console.error("Error:", error);
             throw error;
@@ -172,14 +169,14 @@ parcelRequire = (function (modules, cache, entry, globalName) {
             },
             body: JSON.stringify(send_data),
           };
-        
+
           try {
             const response = await fetch("http://127.0.0.1:5000/suggest", options);
             const data = await response.json();
-        
+
             // Handle the result as needed
             console.log("Result:", data.result);
-        
+
             return data.result;
           } catch (error) {
             console.error("Error:", error);
@@ -201,14 +198,14 @@ parcelRequire = (function (modules, cache, entry, globalName) {
             },
             body: JSON.stringify(send_data),
           };
-        
+
           try {
             const response = await fetch("http://127.0.0.1:5000/repocheck", options);
             const data = await response.json();
-        
+
             // Handle the result as needed
             console.log("Result:", data.result);
-        
+
             return data.result;
           } catch (error) {
             console.error("Error:", error);
@@ -382,6 +379,49 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           document.body.appendChild(checkButton);
 
           /**
+           * getscorebutton
+           * 
+           */
+          // Create Get Score Button
+          var getScoreButton = document.createElement("button");
+          getScoreButton.textContent = "Get Repo Score";
+          getScoreButton.id = "getScoreButton";
+          getScoreButton.style.position = "fixed";
+          getScoreButton.style.borderRadius = "20px";
+          getScoreButton.style.right = "10px";
+          getScoreButton.style.bottom = "60px";
+          getScoreButton.style.backgroundColor = "blue";
+          getScoreButton.style.color = "yellow";
+          getScoreButton.style.border = "none";
+          getScoreButton.style.padding = "8px";
+          getScoreButton.style.visibility = "visible";
+          getScoreButton.style.zIndex = 1000;
+
+          /**
+           * result box
+           */
+
+          // Create Result Box
+          var resultBox = document.createElement("div");
+          resultBox.id = "resultBox";
+          resultBox.style.position = "fixed";
+          resultBox.style.borderRadius = "100px";
+          resultBox.style.right = "10px";
+          resultBox.style.bottom = "60px";
+          resultBox.style.backgroundColor = "blue";
+          resultBox.style.padding = "10px";
+          resultBox.style.zIndex = 1000;
+          resultBox.style.display = "none"; // Change display property to 'block' to make it visible
+          resultBox.style.visibility = "visible"; // This line has no effect as visibility is already set to 'visible'
+
+
+          // Append elements to the document body
+          document.body.appendChild(getScoreButton);
+          initializeButton();
+          document.body.appendChild(resultBox);
+
+
+          /**
            * refering to currently listened element
            */
           var currentElement = null;
@@ -534,7 +574,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                 });
 
                 await getResult(data).then((ans) => {
-                  console.log("hehe",ans);
+                  console.log(ans);
                   // // * Defining the score metric *//
                   // let toxic_score = 0.0;
                   // let obscene_score = 0.0;
@@ -974,7 +1014,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                     {
                       label: "CyberBully Details",
                       data: [
-                        ans, 1-ans
+                        ans, 1 - ans
                         // ans[0].score,
                         // ans[1].score,
                         // ans[2].score,
@@ -1009,16 +1049,16 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                   responsive: true,
                   legend: {
                     display: true,
-                  }, 
+                  },
                   tooltips: {
                     callbacks: {
-                      label: function(tooltipItem, data) {
-                          var label = data.labels[tooltipItem.index] || '';
-                          if (label) {
-                              label += ': ';
-                          }
-                          label += parseFloat(data.datasets[0].data[tooltipItem.index]).toFixed(2); // Displaying values up to 2 decimal places
-                          return label;
+                      label: function (tooltipItem, data) {
+                        var label = data.labels[tooltipItem.index] || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        label += parseFloat(data.datasets[0].data[tooltipItem.index]).toFixed(2); // Displaying values up to 2 decimal places
+                        return label;
                       }
                     }
                   },
@@ -1225,17 +1265,82 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           }
         }
 
-        async function get_url_s()
-        {
-          // Listen for messages from the background script
-          chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
-            // Handle the received message
-            console.log("Message received in content script:", message);
-            getreposcore_s(message.url);
+
+        async function getDataFromCache(url) {
+          return new Promise((resolve, reject) => {
+            chrome.storage.local.get(url, function (result) {
+              if (chrome.runtime.lastError) {
+                reject(chrome.runtime.lastError);
+              } else {
+                resolve(result[url]);
+              }
+            });
           });
         }
 
-        
+        // Define a variable to store the result globally
+        let repoScoreResult = null;
+
+        async function get_url_s() {
+          // Listen for messages from the background script
+          chrome.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
+            // Handle the received message
+            console.log("Message received in content script:", message);
+
+            try {
+              const cachedData = await getDataFromCache(message.url);
+
+              if (cachedData && Date.now() < cachedData.expiresAt) {
+                console.log("Result from cache:", cachedData.data);
+                // Store the cached result globally
+                repoScoreResult = cachedData.data;
+              } else {
+                const result = await getreposcore_s(message.url);
+                console.log("Result from API:", result);
+                // Save the result to cache with expiration time
+                saveDataToCache(message.url, result);
+                // Store the result globally
+                repoScoreResult = result;
+              }
+            } catch (error) {
+              console.error("Error:", error);
+            }
+          });
+        }
+
+        function initializeButton() {
+          getScoreButton.addEventListener("click", function () {
+            // Display the result stored globally
+            console.log("yes getscorebutton is clicked");
+            if (repoScoreResult !== null) {
+              resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
+              resultBox.style.display = "block"; // Make the resultBox visible
+            } else {
+              // If result is not available
+              console.log("Result not available");
+            }
+          });
+        }
+
+
+
+        function saveDataToCache(url, data, expirationTime = 3600 * 1000) {
+          const newData = {
+            data: data,
+            expiresAt: Date.now() + expirationTime // Set expiration time
+          };
+          const newDataObj = {};
+          newDataObj[url] = newData;
+          chrome.storage.local.set(newDataObj, function () {
+            if (chrome.runtime.lastError) {
+              console.error("Error saving to cache:", chrome.runtime.lastError);
+            } else {
+              console.log("Data saved to cache:", newDataObj);
+            }
+          });
+        }
+
+
 
         $(document).ready(function () {
           get_url_s();
