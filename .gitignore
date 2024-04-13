@@ -3,3 +3,4 @@ jsdoc
 package-lock.json
 ToxiCheck/node_modules
 API/model2.pth
+API/.env
