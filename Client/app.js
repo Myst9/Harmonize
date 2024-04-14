@@ -981,7 +981,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                       ],
                       backgroundColor: [
                         "rgba(255, 99, 132, 0.8)",
-                        "rgba(75, 192, 192, 0.8)",      
+                        "rgba(75, 192, 192, 0.8)",
                         // "rgba(54, 162, 235, 0.2)",
                         // "rgba(255, 206, 86, 0.2)",
                         // "rgba(75, 192, 192, 0.2)",
@@ -1254,7 +1254,9 @@ parcelRequire = (function (modules, cache, entry, globalName) {
                   // Store the cached result globally
                   repoScoreResult = cachedData.data;
                 } else {
-                  const result = await getreposcore_s(message.url);
+                  var result = await getreposcore_s(message.url);
+                  result = result * 1000;
+                  result = Number(result).toFixed(2);
                   console.log("Result from API:", result);
                   // Save the result to cache with expiration time
                   saveDataToCache(message.url, result);
@@ -1271,33 +1273,33 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
         function initializeButton() {
           // Create Get Score Button
-          getScoreButton = document.createElement("button");
-          getScoreButton.textContent = "Get Repo Score";
-          getScoreButton.id = "getScoreButton";
-          getScoreButton.style.position = "fixed";
-          getScoreButton.style.borderRadius = "20px";
-          getScoreButton.style.right = "10px";
-          getScoreButton.style.bottom = "60px";
-          getScoreButton.style.backgroundColor = "blue";
-          getScoreButton.style.color = "yellow";
-          getScoreButton.style.border = "none";
-          getScoreButton.style.padding = "8px";
-          getScoreButton.style.visibility = "visible";
-          getScoreButton.style.zIndex = 1000;
+          // getScoreButton = document.createElement("button");
+          // getScoreButton.textContent = "Get Repo Score";
+          // getScoreButton.id = "getScoreButton";
+          // getScoreButton.style.position = "fixed";
+          // getScoreButton.style.borderRadius = "20px";
+          // getScoreButton.style.right = "10px";
+          // getScoreButton.style.bottom = "60px";
+          // getScoreButton.style.backgroundColor = "blue";
+          // getScoreButton.style.color = "yellow";
+          // getScoreButton.style.border = "none";
+          // getScoreButton.style.padding = "8px";
+          // getScoreButton.style.visibility = "visible";
+          // getScoreButton.style.zIndex = 1000;
 
           // Add click event listener to the button
-          getScoreButton.addEventListener("click", function () {
-            // Display the result stored globally
-            console.log("yes getscorebutton is clicked");
-            getScoreButton.style.display = "none";
-            if (repoScoreResult !== null) {
-              resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
-              resultBox.style.display = "block"; // Make the resultBox visible
-            } else {
-              // If result is not available
-              console.log("Result not available");
-            }
-          });
+          // getScoreButton.addEventListener("click", function () {
+          //   // Display the result stored globally
+          //   console.log("yes getscorebutton is clicked");
+          //   getScoreButton.style.display = "none";
+          //   if (repoScoreResult !== null) {
+          //     resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
+          //     resultBox.style.display = "block"; // Make the resultBox visible
+          //   } else {
+          //     // If result is not available
+          //     console.log("Result not available");
+          //   }
+          // });
 
           // Create Result Box
           var resultBox = document.createElement("div");
@@ -1307,21 +1309,98 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           resultBox.style.right = "10px";
           resultBox.style.bottom = "60px";
           resultBox.style.backgroundColor = "blue";
+          resultBox.style.color = "yellow";
           resultBox.style.padding = "10px";
           resultBox.style.zIndex = 1000;
           resultBox.style.display = "none"; // Change display property to 'block' to make it visible
-          resultBox.style.visibility = "visible"; // This line has no effect as visibility is already set to 'visible
+          resultBox.style.visibility = "visible"; 
 
+          if (repoScoreResult !== null) {
+            resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
+            resultBox.style.display = "block"; // Make the resultBox is visible
+            createScoreBar(repoScoreResult);
+          } else {
+            // If result is not available
+            console.log("Result not available");
+          }
           // Append resultBox to the body
           document.body.appendChild(resultBox);
 
           // Append getScoreButton to the body
-          document.body.appendChild(getScoreButton);
+          // document.body.appendChild(getScoreButton);
         }
 
+        function createScoreBar(score) {
+          var scoreBar = document.createElement("div");
+          scoreBar.className = "score-bar";
+          scoreBar.style.position = "fixed";
+          scoreBar.style.border = "1px solid #000";
+          scoreBar.style.width = "200px"; 
+          scoreBar.style.height = "20px"; 
+          scoreBar.style.right = "10px";
+          scoreBar.style.top = "150px";
 
+          var scorePoint = document.createElement("div");
+          scorePoint.className = "score-point";
+          scorePoint.style.position = "absolute";
+          scorePoint.style.height = "100%";
+          scorePoint.style.width = "2px";
+          scorePoint.style.backgroundColor = "black"; 
+          scorePoint.style.left = (score / 100) * 200 + "px"; //score indicator
 
+          var greenWidth = 33.33; 
+          var orangeWidth = 33.33; 
+          var redWidth = 33.34; 
 
+          var greenSection = document.createElement("div");
+          greenSection.className = "green";
+          greenSection.style.position = "absolute";
+          greenSection.style.height = "100%";
+          greenSection.style.width = greenWidth + "%";
+          greenSection.style.backgroundColor = "green";
+          greenSection.style.left = "0"; 
+
+          var orangeSection = document.createElement("div");
+          orangeSection.className = "orange";
+          orangeSection.style.position = "absolute";
+          orangeSection.style.height = "100%";
+          orangeSection.style.width = orangeWidth + "%";
+          orangeSection.style.backgroundColor = "orange";
+          orangeSection.style.left = greenWidth + "%"; 
+
+          var redSection = document.createElement("div");
+          redSection.className = "red";
+          redSection.style.position = "absolute";
+          redSection.style.height = "100%";
+          redSection.style.width = redWidth + "%";
+          redSection.style.backgroundColor = "red";
+          redSection.style.left = (greenWidth + orangeWidth) + "%"; 
+
+          var message = document.createElement("div");
+          message.className = "score-message";
+          message.style.position = "absolute";
+          message.style.top = "-30px"; 
+          message.style.left = "0";
+          message.style.width = "200px";
+          message.style.textAlign = "center";
+        
+          if (score <= 33.33) {
+            message.textContent = "It is OK";
+          } else if (score <= 66.66) {
+            message.textContent = "Not Ideal";
+          } else {
+            message.textContent = "Avoid";
+          }
+        
+          scoreBar.appendChild(message);
+
+          scoreBar.appendChild(greenSection);
+          scoreBar.appendChild(orangeSection);
+          scoreBar.appendChild(redSection);
+          scoreBar.appendChild(scorePoint);
+
+          document.body.appendChild(scoreBar);
+        }
 
         function saveDataToCache(url, data, expirationTime = 3600 * 1000) {
           const newData = {
