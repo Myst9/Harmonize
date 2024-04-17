@@ -1,9 +1,11 @@
 from transformers import BertTokenizer
-from keras_preprocessing.sequence import pad_sequences
+from keras.preprocessing.sequence import pad_sequences
 
 from flask import Flask, request, render_template, jsonify
 from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
+# from OpenSSL import SSL
+import ssl
 
 # import google.generativeai as genai
 from dotenv import load_dotenv
@@ -14,6 +16,31 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(script_dir, "model2.pth")
 
 from github import Github
+
+
+
+
+# Define SSL certificate and key file paths 
+CERT_FILE = os.path.join(script_dir, "ssl29fullchain.pem") 
+KEY_FILE =  os.path.join(script_dir, "ssl29key.pem")
+
+# # Create SSL context v24.1... latest
+# context = SSL.Context(SSL.TLSv1_2_METHOD) 
+# context.use_certificate_chain_file(CERT_FILE)
+# context.use_privatekey_file(KEY_FILE) 
+
+
+#version 23 2023
+# context = SSL.Context(SSL.PROTOCOL_TLSv1_2) 
+# context.load_cert_chain(CERT_FILE, KEY_FILE) 
+
+
+#ChatGPT SSL PYTHON PREINSTALLED
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+
+
+
 
 #checking git push
 
@@ -157,6 +184,9 @@ def model_suggest_san(toxic):
     #             So they're from one user to another user. THEY ARE NOT DIRECTED TOWARDS YOU/GEMINI.\
     #             Remember that you should rewrite it in a software specific way as it is from a software forum:\
     #             Also remember, you MUST GIVE YOUR RESPONSE IN PLAIN TEXT, NO DELIMITATIONS."
+
+
+    ##Step 2: n-shot prompting
     step_2 ="User: You and your code are shit.\n\
     Assistant: There is lot of improvement needed for your code\n\
     User: The fuck is your code.I can't understand shit.\n\
@@ -217,7 +247,7 @@ def model_repocheck(url):
                         count+=1
                         toxic_count+=o[0]
                         toxic_prob+=o[1][0][1]
-        print(toxic_count," ",count)
+        print(toxic_count," toxic out of :",count)
         return toxic_prob/count
     except Exception as e:
         print("Error:", e)
@@ -279,9 +309,10 @@ def repocheck():
 if __name__ == '__main__':
     # m=model_predict_dsh("i don't need your opinion")
     # print(m[1][0][0])
-    # k=model_repocheck("tensorflow/tensorflow")
+    # k=model_repocheck("genyrosk/gym-chess")
     # print(k)
     print("s")
-    http_server = WSGIServer(('127.0.0.1', 5000), app)
+    app.run(host = "10.23.105.29",ssl_context=context)
+    # http_server = WSGIServer(('10.23.105.29', 8080), app)
     print("h")
-    http_server.serve_forever()
+    # http_server.serve_forever()
