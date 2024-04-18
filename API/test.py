@@ -86,9 +86,12 @@ from transformers import BertForSequenceClassification
 
 # Load the pre-trained model
 model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
+
 print("m loading")
 # Load the saved model state
 model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
+dev=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+model = model.to(dev)
 print("model loaded")
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
 
