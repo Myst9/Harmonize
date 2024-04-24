@@ -1272,65 +1272,45 @@ parcelRequire = (function (modules, cache, entry, globalName) {
         }
 
         function initializeButton() {
-          // Create Get Score Button
-          // getScoreButton = document.createElement("button");
-          // getScoreButton.textContent = "Get Repo Score";
-          // getScoreButton.id = "getScoreButton";
-          // getScoreButton.style.position = "fixed";
-          // getScoreButton.style.borderRadius = "20px";
-          // getScoreButton.style.right = "10px";
-          // getScoreButton.style.bottom = "60px";
-          // getScoreButton.style.backgroundColor = "blue";
-          // getScoreButton.style.color = "yellow";
-          // getScoreButton.style.border = "none";
-          // getScoreButton.style.padding = "8px";
-          // getScoreButton.style.visibility = "visible";
-          // getScoreButton.style.zIndex = 1000;
-
-          // Add click event listener to the button
-          // getScoreButton.addEventListener("click", function () {
-          //   // Display the result stored globally
-          //   console.log("yes getscorebutton is clicked");
-          //   getScoreButton.style.display = "none";
-          //   if (repoScoreResult !== null) {
-          //     resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
-          //     resultBox.style.display = "block"; // Make the resultBox visible
-          //   } else {
-          //     // If result is not available
-          //     console.log("Result not available");
-          //   }
-          // });
-
-          // Create Result Box
-          var resultBox = document.createElement("div");
-          resultBox.id = "resultBox";
-          resultBox.style.position = "fixed";
-          resultBox.style.borderRadius = "100px";
-          resultBox.style.right = "10px";
-          resultBox.style.bottom = "60px";
-          resultBox.style.backgroundColor = "blue";
-          resultBox.style.color = "yellow";
-          resultBox.style.padding = "10px";
-          resultBox.style.zIndex = 1000;
-          resultBox.style.display = "none"; // Change display property to 'block' to make it visible
-          resultBox.style.visibility = "visible"; 
-
-          if (repoScoreResult !== null) {
-            resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
-            resultBox.style.display = "block"; // Make the resultBox is visible
-            createScoreBar(repoScoreResult);
+          // Find the repository header element
+          const repoHeader = document.querySelector('h1[class="public"]');
+          if (repoHeader) {
+              // Create a container for the score
+              const scoreContainer = document.createElement('div');
+              scoreContainer.id = 'scoreContainer';
+              scoreContainer.style.marginTop = '10px'; // Adjust margin as needed
+      
+              // Append the score container after the GitHub container-xl
+              const githubContainerXL = document.querySelector('.container-xl');
+              if (githubContainerXL) {
+                  githubContainerXL.parentNode.insertBefore(scoreContainer, githubContainerXL.nextSibling);
+              } else {
+                  console.log("GitHub container-xl not found.");
+                  return;
+              }
+      
+              // Get the repo score result, replace with your actual score
+              const repoScoreResult = 75;
+      
+              // Create the score element
+              const scoreElement = document.createElement('div');
+              scoreElement.textContent = `Toxicity Score: ${repoScoreResult}`;
+              scoreElement.style.color = 'blue'; // Customize styles as needed
+      
+              // Append the score element to the score container
+              scoreContainer.appendChild(scoreElement);
+      
+              // Create the score bar
+              const scoreBar = createScoreBar(repoScoreResult, scoreContainer);
+      
           } else {
-            // If result is not available
-            console.log("Result not available");
+              console.log("Repository header not found.");
           }
-          // Append resultBox to the body
-          document.body.appendChild(resultBox);
+      }
+         
+           
 
-          // Append getScoreButton to the body
-          // document.body.appendChild(getScoreButton);
-        }
-
-        function createScoreBar(score) {
+        function createScoreBar(score, scoreContainer) {
           var scoreBar = document.createElement("div");
           scoreBar.className = "score-bar";
           scoreBar.style.position = "fixed";
@@ -1399,7 +1379,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           scoreBar.appendChild(redSection);
           scoreBar.appendChild(scorePoint);
 
-          document.body.appendChild(scoreBar);
+          scoreContainer.appendChild(scoreBar);
         }
 
         function saveDataToCache(url, data, expirationTime = 3600 * 1000) {
