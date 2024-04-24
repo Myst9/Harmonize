@@ -76,8 +76,6 @@ API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Inst
 headers = {"Authorization": "Bearer "+hf_token}
 ######################
 
-
-
 def model_predict_dsh(sentence):
     tokenized_sentence = tokenizer.tokenize(sentence)
 
@@ -107,7 +105,6 @@ def model_predict_dsh(sentence):
     predicted_probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
     # Get the predicted class index
     predicted_class = torch.argmax(predicted_probs, dim=1).item()
-    # print(predicted_class, predicted_probs.numpy())
     return (predicted_class,predicted_probs.numpy())
 
 
@@ -186,9 +183,11 @@ def model_suggest_san(toxic):
     # # print(response.prompt_feedback)
     # return response.text
 
-
+score_list=[]
 def model_repocheck(url):
     try:
+        dict={}
+        dict_count={}
         # Initialize PyGithub with an anonymous GitHub API access
         github_token = os.environ.get('GITHUB_TOKEN')
 
@@ -200,9 +199,19 @@ def model_repocheck(url):
         count=0
         toxic_count=0
         toxic_prob=0
+        toxic_prob_array = []
+        # Initialize the dictionary to store the counts for each range
+        score_ranges = {f'{i}-{i+10}': 0 for i in range(0, 100, 10)}
         # Get all issues from the repository
         issues = repo.get_issues(state='all')
-
+        contributors = repo.get_contributors()
+        
+        for contributor in contributors:
+            dict[contributor.login]=0
+            dict_count[contributor.login]=0
+        
+        # Iterate through issues and extract comments
+        # print(contributors , "contributors")
         # Iterate through issues and extract comments
         for issue in issues:
             if issue.body:  # Check if issue body is not None
@@ -210,6 +219,13 @@ def model_repocheck(url):
                 count+=1
                 toxic_count+=p[0]
                 toxic_prob+=p[1][0][1]
+                toxic_prob_array.append(p[1][0][1])
+
+                # print(issue.user.login , "username")
+                if issue.user in contributors:
+                    dict[issue.user.login]+=p[1][0][1]
+                    dict_count[issue.user.login]+=1
+                score_list.append(p[1][0][1])
                 comments = issue.get_comments()
                 for comment in comments:
                     if comment.body:  # Check if comment body is not None
@@ -217,8 +233,27 @@ def model_repocheck(url):
                         count+=1
                         toxic_count+=o[0]
                         toxic_prob+=o[1][0][1]
-        print(toxic_count," ",count)
-        return toxic_prob/count
+                        if comment.user in contributors:
+                            dict[comment.user.login]+=o[1][0][1]
+                            dict_count[comment.user.login]+=1
+                        score_list.append(o[1][0][1])
+        # Count the scores falling into each range
+        for score in toxic_prob_array:
+            for key in score_ranges:
+                start, end = map(int, key.split('-'))
+                if start <= score * 100 < end:
+                    score_ranges[key] += 1
+                    break
+        for contributor in contributors:
+            if dict_count[contributor.login]!=0:
+                dict[contributor.login]/=dict_count[contributor.login]
+        # print(toxic_count," ",count)
+        # print(score_list)
+        # print(dict)
+        if count!=0:
+            toxic_prob/=count
+        print(score_ranges)
+        return (toxic_prob, dict,score_ranges)
     except Exception as e:
         print("Error:", e)
         return None
@@ -266,12 +301,15 @@ def repocheck():
         url = request.json
         repository = url.split("github.com/")[-1]  # Extract everything after "github.com/"
         print(repository)
-        
+
         print(request.json)
         prediction = model_repocheck(repository)
-        result = prediction
+        result = prediction[0]
+        dictio = prediction[1]
+        score_ranges = prediction[2]
         print("res: " , result)
-        return jsonify(result=result)
+        print("dict: " , dictio)
+        return jsonify(result=result , dict=dictio, score_ranges=score_ranges)
 
     return None
 
