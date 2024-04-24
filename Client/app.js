@@ -202,11 +202,14 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           try {
             const response = await fetch("http://127.0.0.1:5000/repocheck", options);
             const data = await response.json();
+            console.log(data);
 
             // Handle the result as needed
             console.log("Result:", data.result);
+            console.log("Dict:", data.dict);
+            console.log("Score_ranges", data.score_ranges);
 
-            return data.result;
+            return { result: data.result, dict: data.dict , score_ranges:data.score_ranges};
           } catch (error) {
             console.error("Error:", error);
             throw error;
@@ -1235,6 +1238,32 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           });
         }
 
+        var originalContent = null;
+
+        function showLoadingScreen() {
+          // Save the original content
+          originalContent = document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0].innerHTML;
+
+          // Find the target element with class "Box-sc-g0xbh4-0 yfPnm"
+          var targetElement = document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0];
+          console.log("Target Element:", targetElement);
+
+          // Add loading screen iframe along with the original content
+
+          targetElement.innerHTML = '<iframe style="margin-bottom:2rem;width:100%;height:18rem;border:none;" src="https://myst9.github.io/harmonize-frontend/"></iframe>' + originalContent;
+        }
+
+        // Hide loading screen
+        function hideLoadingScreen() {
+          // Restore the original content
+          var targetElement = document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0];
+          if (originalContent) {
+            targetElement.innerHTML = originalContent;
+          }
+        }
+
+
+
         // Define a variable to store the result globally
         let repoScoreResult = null;
 
@@ -1246,91 +1275,297 @@ parcelRequire = (function (modules, cache, entry, globalName) {
 
             if (message.url.startsWith("https://github.com/")) {
               console.log("yes it is github");
+              let userdict, scoredict;
               try {
                 const cachedData = await getDataFromCache(message.url);
-
                 if (cachedData && Date.now() < cachedData.expiresAt) {
-                  console.log("Result from cache:", cachedData.data);
+                  console.log("Result from cache:", cachedData.data.result);
                   // Store the cached result globally
-                  repoScoreResult = cachedData.data;
+                  repoScoreResult = cachedData.data.result;
+                  userdict = cachedData.data.dict;
+                  scoredict = cachedData.data.score_ranges;
+                  // Display the toxicity graph using cached dictionary
+                  //displayToxicityGraph(cachedData.data.dict);
+                  //displayScoreRangesGraph(cachedData.data.score_ranges);
                 } else {
-                  var result = await getreposcore_s(message.url);
-                  result = result * 1000;
-                  result = Number(result).toFixed(2);
-                  console.log("Result from API:", result);
-                  // Save the result to cache with expiration time
-                  saveDataToCache(message.url, result);
+                  setTimeout(function () {
+                    showLoadingScreen();
+                  }, 1500);
+                  const { result, dict, score_ranges } = await getreposcore_s(message.url);
+                  console.log(score_ranges);
+                  const formattedResult = (result * 100).toFixed(2);
+                  console.log("Result from API:", formattedResult);
+                  // Save the result and dictionary to cache with expiration time
+                  const cacheData = {
+                    result: formattedResult,
+                    dict: dict,
+                    score_ranges: score_ranges
+                  };
+                  saveDataToCache(message.url, cacheData);
                   // Store the result globally
-                  repoScoreResult = result;
+                  repoScoreResult = formattedResult;
+                  console.log("Dictionary from API:", dict);
+                  userdict = dict;
+                  scoredict = score_ranges;
+                  // Display the toxicity graph
+                  //displayToxicityGraph(newdict);
+                  //displayScoreRangesGraph(score_ranges);
                 }
-                initializeButton(); // Call initializeButton
+                createScoreBar(repoScoreResult); // Call initializeButton
               } catch (error) {
                 console.error("Error:", error);
+              } finally {
+                console.log(userdict);
+                console.log(scoredict);
+                hideLoadingScreen()
+                setTimeout(function () {
+                  showRepoScoreResult(repoScoreResult, userdict, scoredict);
+                }, 1600);
               }
             }
           });
         }
 
-        function initializeButton() {
-          // Find the repository header element
-          const repoHeader = document.querySelector('h1[class="public"]');
-          if (repoHeader) {
-              // Create a container for the score
-              const scoreContainer = document.createElement('div');
-              scoreContainer.id = 'scoreContainer';
-              scoreContainer.style.marginTop = '10px'; // Adjust margin as needed
-      
-              // Append the score container after the GitHub container-xl
-              const githubContainerXL = document.querySelector('.container-xl');
-              if (githubContainerXL) {
-                  githubContainerXL.parentNode.insertBefore(scoreContainer, githubContainerXL.nextSibling);
-              } else {
-                  console.log("GitHub container-xl not found.");
-                  return;
-              }
-      
-              // Get the repo score result, replace with your actual score
-              const repoScoreResult = 75;
-      
-              // Create the score element
-              const scoreElement = document.createElement('div');
-              scoreElement.textContent = `Toxicity Score: ${repoScoreResult}`;
-              scoreElement.style.color = 'blue'; // Customize styles as needed
-      
-              // Append the score element to the score container
-              scoreContainer.appendChild(scoreElement);
-      
-              // Create the score bar
-              const scoreBar = createScoreBar(repoScoreResult, scoreContainer);
-      
-          } else {
-              console.log("Repository header not found.");
-          }
-      }
-         
-           
 
-        function createScoreBar(score, scoreContainer) {
+        async function showRepoScoreResult(repoScore, userdict, scoredict) {
+          try {
+              // Serialize both dictionaries into a format that can be passed via URL
+              const serializedUserDict = encodeURIComponent(JSON.stringify(userdict));
+              const serializedScoreDict = encodeURIComponent(JSON.stringify(scoredict));
+              
+              // Construct the URL with both dictionaries as query parameters
+              const htmlURL = `https://myst9.github.io/harmonize-frontend/results.html?score=${repoScore}&userdict=${serializedUserDict}&scoredict=${serializedScoreDict}`;
+              console.log(htmlURL);
+              // Replace the iframe with the new URL
+              //document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0].innerHTML = `<iframe style="margin-bottom:2rem;width:100%;height:18rem;border:none;" src="${htmlURL}"></iframe>`;
+              // Save the original content
+          originalContent = document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0].innerHTML;
+
+          // Find the target element with class "Box-sc-g0xbh4-0 yfPnm"
+          var targetElement = document.getElementsByClassName("Box-sc-g0xbh4-0 yfPnm")[0];
+          console.log("Target Element:", targetElement);
+
+          // Add loading screen iframe along with the original content
+
+          // Add loading screen iframe along with the original content
+        targetElement.innerHTML = `<iframe id="resultFrame" style="margin-bottom:2rem;width:100%;height:40rem;border:none;" src="${htmlURL}"></iframe>` + originalContent;
+          } catch (error) {
+              console.error("Error", error);
+          }
+      
+      }      
+
+        async function displayToxicityGraph(data) {
+          try {
+            // Extract users and toxicity scores from the dictionary
+            const users = Object.keys(data);
+            const toxicities = Object.values(data);
+
+            // Create a new canvas element
+            const canvas = document.createElement("canvas");
+            canvas.id = "chartid"; // Set the id attribute
+            canvas.classList.add("chartjs-render-monitor"); // Add the required class
+            canvas.width = 750; // Set the width
+            canvas.height = 375; // Set the height
+            canvas.style.cssText = `
+                  position: fixed;
+                  border-radius: 20px;
+                  right: 10px;
+                  top: 200px;
+                  height: 300px;
+                  overflow: scroll;
+                  width: 600px;
+                  background-color: white;
+                  color: black;
+                  border: 1px solid white;
+                  padding: 8px;
+                  z-index: 2000;
+                  visibility: visible;
+                  max-height: 600px;
+                  max-width: 600px;
+                  display: block;
+              `; // Set the CSS styles
+
+            // Append the canvas to the document body
+            document.body.appendChild(canvas);
+
+            // Get the context of the canvas
+            const ctx = canvas.getContext("2d");
+
+            // Create the chart using Chart.js
+            new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: users,
+                datasets: [{
+                  label: 'Toxicity Score',
+                  data: toxicities,
+                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                  borderColor: 'rgba(255, 99, 132, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+
+          } catch (error) {
+            console.error("Error:", error);
+          }
+        }
+
+
+        async function displayScoreRangesGraph(scoreRangesData) {
+          try {
+            // Extract score ranges and their frequencies from the dictionary
+            const scoreRanges = Object.keys(scoreRangesData);
+            const frequencies = Object.values(scoreRangesData);
+
+            // Create a new canvas element
+            const canvas = document.createElement("canvas");
+            canvas.id = "scoreRangesChart"; // Set the id attribute
+            canvas.classList.add("chartjs-render-monitor"); // Add the required class
+            canvas.width = 750; // Set the width
+            canvas.height = 375; // Set the height
+            canvas.style.cssText = `
+                position: fixed;
+                border-radius: 20px;
+                left: 10px;
+                top: 200px;
+                height: 300px;
+                overflow: scroll;
+                width: 600px;
+                background-color: white;
+                color: black;
+                border: 1px solid white;
+                padding: 8px;
+                z-index: 2000;
+                visibility: visible;
+                max-height: 600px;
+                max-width: 600px;
+                display: block;
+            `; // Set the CSS styles
+
+            // Append the canvas to the document body
+            document.body.appendChild(canvas);
+
+            // Get the context of the canvas
+            const ctx = canvas.getContext("2d");
+
+            // Create the chart using Chart.js
+            new Chart(ctx, {
+              type: 'bar',
+              data: {
+                labels: scoreRanges,
+                datasets: [{
+                  label: 'Frequency',
+                  data: frequencies,
+                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                  borderColor: 'rgba(255, 99, 132, 1)',
+                  borderWidth: 1
+                }]
+              },
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }
+            });
+
+          } catch (error) {
+            console.error("Error:", error);
+          }
+        }
+
+
+
+        function initializeButton() {
+          // Create Get Score Button
+          // getScoreButton = document.createElement("button");
+          // getScoreButton.textContent = "Get Repo Score";
+          // getScoreButton.id = "getScoreButton";
+          // getScoreButton.style.position = "fixed";
+          // getScoreButton.style.borderRadius = "20px";
+          // getScoreButton.style.right = "10px";
+          // getScoreButton.style.bottom = "60px";
+          // getScoreButton.style.backgroundColor = "blue";
+          // getScoreButton.style.color = "yellow";
+          // getScoreButton.style.border = "none";
+          // getScoreButton.style.padding = "8px";
+          // getScoreButton.style.visibility = "visible";
+          // getScoreButton.style.zIndex = 1000;
+
+          // Add click event listener to the button
+          // getScoreButton.addEventListener("click", function () {
+          //   // Display the result stored globally
+          //   console.log("yes getscorebutton is clicked");
+          //   getScoreButton.style.display = "none";
+          //   if (repoScoreResult !== null) {
+          //     resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
+          //     resultBox.style.display = "block"; // Make the resultBox visible
+          //   } else {
+          //     // If result is not available
+          //     console.log("Result not available");
+          //   }
+          // });
+
+          // Create Result Box
+        //   var resultBox = document.createElement("div");
+        //   resultBox.id = "resultBox";
+        //   resultBox.style.position = "fixed";
+        //   resultBox.style.borderRadius = "100px";
+        //   resultBox.style.right = "10px";
+        //   resultBox.style.bottom = "60px";
+        //   resultBox.style.backgroundColor = "blue";
+        //   resultBox.style.color = "yellow";
+        //   resultBox.style.padding = "10px";
+        //   resultBox.style.zIndex = 1000;
+        //   resultBox.style.display = "none"; // Change display property to 'block' to make it visible
+        //   resultBox.style.visibility = "visible";
+
+        //   if (repoScoreResult !== null) {
+        //     resultBox.textContent = `Repo's Toxicity Score: ${repoScoreResult}`;
+        //     resultBox.style.display = "block"; // Make the resultBox is visible
+        //     createScoreBar(repoScoreResult);
+        //   } else {
+        //     // If result is not available
+        //     console.log("Result not available");
+        //   }
+        //   // Append resultBox to the body
+        //   //document.body.appendChild(resultBox);
+
+        //   // Append getScoreButton to the body
+        //   // document.body.appendChild(getScoreButton);
+        }
+
+        function createScoreBar(score) {
           var scoreBar = document.createElement("div");
           scoreBar.className = "score-bar";
-          scoreBar.style.position = "fixed";
+          scoreBar.style.position = "absolute";
           scoreBar.style.border = "1px solid #000";
-          scoreBar.style.width = "200px"; 
-          scoreBar.style.height = "20px"; 
+          scoreBar.style.width = "200px";
+          scoreBar.style.height = "20px";
           scoreBar.style.right = "10px";
-          scoreBar.style.top = "150px";
+          scoreBar.style.top = "80px";
 
           var scorePoint = document.createElement("div");
           scorePoint.className = "score-point";
           scorePoint.style.position = "absolute";
           scorePoint.style.height = "100%";
-          scorePoint.style.width = "2px";
-          scorePoint.style.backgroundColor = "black"; 
+          scorePoint.style.width = "5px";
+          scorePoint.style.backgroundColor = "white";
           scorePoint.style.left = (score / 100) * 200 + "px"; //score indicator
 
-          var greenWidth = 33.33; 
-          var orangeWidth = 33.33; 
-          var redWidth = 33.34; 
+          var greenWidth = 33.33;
+          var orangeWidth = 33.33;
+          var redWidth = 33.34;
 
           var greenSection = document.createElement("div");
           greenSection.className = "green";
@@ -1338,7 +1573,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           greenSection.style.height = "100%";
           greenSection.style.width = greenWidth + "%";
           greenSection.style.backgroundColor = "green";
-          greenSection.style.left = "0"; 
+          greenSection.style.left = "0";
 
           var orangeSection = document.createElement("div");
           orangeSection.className = "orange";
@@ -1346,7 +1581,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           orangeSection.style.height = "100%";
           orangeSection.style.width = orangeWidth + "%";
           orangeSection.style.backgroundColor = "orange";
-          orangeSection.style.left = greenWidth + "%"; 
+          orangeSection.style.left = greenWidth + "%";
 
           var redSection = document.createElement("div");
           redSection.className = "red";
@@ -1354,24 +1589,24 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           redSection.style.height = "100%";
           redSection.style.width = redWidth + "%";
           redSection.style.backgroundColor = "red";
-          redSection.style.left = (greenWidth + orangeWidth) + "%"; 
+          redSection.style.left = (greenWidth + orangeWidth) + "%";
 
           var message = document.createElement("div");
           message.className = "score-message";
           message.style.position = "absolute";
-          message.style.top = "-30px"; 
+          message.style.top = "-30px";
           message.style.left = "0";
           message.style.width = "200px";
           message.style.textAlign = "center";
-        
+
           if (score <= 33.33) {
-            message.textContent = "It is OK";
+            message.textContent = "Low";
           } else if (score <= 66.66) {
-            message.textContent = "Not Ideal";
+            message.textContent = "Medium";
           } else {
-            message.textContent = "Avoid";
+            message.textContent = "High";
           }
-        
+
           scoreBar.appendChild(message);
 
           scoreBar.appendChild(greenSection);
@@ -1379,7 +1614,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
           scoreBar.appendChild(redSection);
           scoreBar.appendChild(scorePoint);
 
-          scoreContainer.appendChild(scoreBar);
+          document.body.appendChild(scoreBar);
         }
 
         function saveDataToCache(url, data, expirationTime = 3600 * 1000) {
