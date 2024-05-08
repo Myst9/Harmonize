@@ -1,4 +1,4 @@
-from transformers import BertTokenizer
+from transformers import RobertaForSequenceClassification, RobertaTokenizer
 from keras_preprocessing.sequence import pad_sequences
 
 from flask import Flask, request, render_template, jsonify
@@ -11,7 +11,8 @@ import os
 import requests
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(script_dir, "model2.pth")
+MODEL_NAME = "roberta_6_6_test=0.6_denoised.pth"
+model_path = os.path.join(script_dir, MODEL_NAME)
 
 from github import Github
 
@@ -55,15 +56,14 @@ CORS(app)
 ############
 
 # ###MODEL AND TOKENIZER LOADING###
-from transformers import BertForSequenceClassification
 
 # Load the pre-trained model
-model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=2)
+model = RobertaForSequenceClassification.from_pretrained('roberta-base', num_labels=2)
 print("m loading")
 # Load the saved model state
 model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
 print("model loaded")
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
 
 # Set the model to evaluation mode
 model.eval()
