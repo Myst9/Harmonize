@@ -8,6 +8,12 @@ Harmonize is a Google Chrome Extension built to make Software Engineering online
 <img src="https://github.com/Myst9/Harmonize/blob/main/Images/logo.jpg" />
 </p>
 
+
+Check out [Harmonize Frontend](https://github.com/swethareddy53/Harmonize_frontend) for the server-version Frontend Code.
+
+Check out [Harmonize Backend](https://github.com/Santhosi03/Harmonize_backend) for the server-version Backend Code.
+
+
 ## Technical Details
 
 •	BERT Model fine-tuned on ToxiCR dataset  
